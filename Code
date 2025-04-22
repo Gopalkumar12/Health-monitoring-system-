@@ -1,1 +1,41 @@
 
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include "MAX30100_PulseOximeter.h"
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET -1
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+PulseOximeter pox;
+uint32_t tsLastReport = 0;
+
+void onBeatDetected() {}
+
+void setup() {
+  Serial.begin(9600);
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  pox.begin();
+  pox.setOnBeatDetectedCallback(onBeatDetected);
+}
+
+void loop() {
+  pox.update();
+  if (millis() - tsLastReport > 1000) {
+    tsLastReport = millis();
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.print("Heart Rate: ");
+    display.print(pox.getHeartRate());
+    display.println(" bpm");
+    display.print("SpO2: ");
+    display.print(pox.getSpO2());
+    display.println(" %");
+    display.display();
+  }
+}
